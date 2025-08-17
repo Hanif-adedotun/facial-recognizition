@@ -1,0 +1,50 @@
+import unittest
+from unittest.mock import Mock, patch
+import numpy as np
+from PIL import Image
+import cv2
+import streamlit as st
+
+class TestFacialRecognition(unittest.TestCase):
+    @patch('cv2.CascadeClassifier')
+    def test_load_classifier(self, mock_classifier):
+        # Arrange
+        mock_classifier.return_value = Mock()
+        
+        # Act
+        classifier = cv2.CascadeClassifier('haar cascade file')
+        
+        # Assert
+        mock_classifier.assert_called_once_with('haar cascade file')
+        self.assertIsNotNone(classifier)
+
+    @patch('cv2.imread')
+    def test_load_image(self, mock_read):
+        # Arrange
+        image_data = np.random.randint(0, 256, size=(100, 100, 3), dtype=np.uint8)
+        image = Image.fromarray(image_data)
+        mock_read.return_value = image_data
+        
+        # Act
+        image = cv2.imread('image file')
+        
+        # Assert
+        mock_read.assert_called_once_with('image file')
+        self.assertIsNotNone(image)
+
+    @patch('streamlit.uploaded_file_manager')
+    def test_upload_image(self, mock_manager):
+        # Arrange
+        image_data = np.random.randint(0, 256, size=(100, 100, 3), dtype=np.uint8)
+        image = Image.fromarray(image_data)
+        mock_file = Mock()
+        mock_file.getbuffer.return_value = image.tobytes()
+        mock_manager.return_value = (mock_file,)
+        st.uploaded_file_manager = mock_manager
+        
+        # Act
+        uploaded_file = st.file_uploader('Choose an image')
+        
+        # Assert
+        mock_manager.assert_called_once()
+        self.assertIsNotNone(uploaded_file)
